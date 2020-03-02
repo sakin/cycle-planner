@@ -32,9 +32,6 @@
               <div class="grid grid-cols-3 gap-4">
                 <div>
                   <span>{{ project.name }}</span>
-                  <div class="flex">
-                    <a href="">Add a member</a>
-                  </div>
                 </div>
                 <div class="text-left">
                   <input
@@ -42,7 +39,7 @@
                     @change="onWeeksChange"
                     v-model="project.numWeeks"
                     :data-id="project.id"
-                    class="w-1/2"
+                    class="w-1/2 border-gray-300 border rounded p-2"
                   />
                 </div>
                 <div class="text-left">
@@ -65,10 +62,18 @@
               {{ project.name }}:{{ project.numWeeks }}
             </li>
           </ul>
+          <p>
+            Active Project: <span v-if="activeProject">{{ activeProject.name }}</span>
+          </p>
         </div>
       </div>
     </div>
-    <EditMembersModal :isOpen="isEditMemberModalOpen" />
+    <EditMembersModal
+      ref="editMembersModal"
+      :active-project="activeProject"
+      v-if="activeProject"
+      v-on:dismiss="onDismiss"
+    />
   </div>
 </template>
 
@@ -85,10 +90,25 @@ export default {
   data() {
     return {
       projectName: "",
-      projects: [],
-      isEditMemberModalOpen: false,
-      activeProject: {}
+      projects: [
+        {
+          id: 1,
+          name: "First Project"
+        }
+      ],
+      activeProjectId: null,
+      members: []
     };
+  },
+  computed: {
+    activeProject() {
+      const projectIndex = this.projects.findIndex(project => {
+        console.log(project.id, this.activeProjectId);
+        return project.id === parseInt(this.activeProjectId, 10);
+      });
+      console.log("computed", this.activeProjectId, projectIndex);
+      return this.projects[projectIndex];
+    }
   },
   methods: {
     addProject(event) {
@@ -100,9 +120,7 @@ export default {
       this.projectName = "";
     },
     onWeeksChange(event) {
-      console.log(event, event.target.value);
       const id = event.target.getAttribute("data-id");
-
       const projectIndex = this.projects.findIndex(project => project.id === parseInt(id, 10));
 
       this.$set(this.projects, projectIndex, {
@@ -122,9 +140,10 @@ export default {
     },
     onEditMembers(event) {
       const id = event.target.getAttribute("data-id");
-      const projectIndex = this.projects.findIndex(project => project.id === parseInt(id, 10));
-      this.isEditMemberModalOpen = true;
-      this.activeProject = this.projects[projectIndex];
+      this.activeProjectId = id;
+    },
+    onDismiss() {
+      this.activeProjectId = null;
     }
   }
 };
